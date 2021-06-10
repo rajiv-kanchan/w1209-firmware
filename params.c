@@ -119,9 +119,15 @@ void setParam (int val)
  */
 void incParam()
 {
+    
+    int pmax = paramMax[paramId];
+    if (paramId == PARAM_THRESHOLD) {
+        pmax = paramCache[PARAM_MAX_TEMPERATURE] * 10;
+    }
+
     if (paramId == PARAM_RELAY_MODE || paramId == PARAM_OVERHEAT_INDICATION) {
         paramCache[paramId] = ~paramCache[paramId] & 0x0001;
-    } else if (paramCache[paramId] < paramMax[paramId]) {
+    }   else if (paramCache[paramId] < pmax) {
         paramCache[paramId]++;
     }
 }
@@ -131,9 +137,14 @@ void incParam()
  */
 void decParam()
 {
+    int pmin = paramMin[paramId];
+    if (paramId == PARAM_THRESHOLD) {
+        pmin = paramCache[PARAM_MIN_TEMPERATURE] * 10;
+    }
+
     if (paramId == PARAM_RELAY_MODE || paramId == PARAM_OVERHEAT_INDICATION) {
         paramCache[paramId] = ~paramCache[paramId] & 0x0001;
-    } else if (paramCache[paramId] > paramMin[paramId]) {
+    } else if (paramCache[paramId] > pmin) {
         paramCache[paramId]--;
     }
 }
