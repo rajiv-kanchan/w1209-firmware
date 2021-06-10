@@ -11,9 +11,8 @@ LibrarySwitch          :=-l stm8
 OutputSwitch           :=-o 
 LibraryPathSwitch      :=-L
 SourceSwitch           :=-c 
-LinkerName             :=/usr/bin/sdcc
-LinkOptions            := --out-fmt-ihx -mstm8
-OutputFile             :=$(BuildDirectory)/$(ProjectName).ihx
+#LinkerName             :=/usr/bin/sdcc
+LinkerName             :=/usr/local/bin/sdcc
 ObjectSwitch           :=-o 
 MakeDirCommand         :=mkdir -p
 IncludePath            := $(IncludeSwitch). $(IncludeSwitch)./include 
@@ -22,8 +21,18 @@ IncludePath            := $(IncludeSwitch). $(IncludeSwitch)./include
 ## Common variables
 ## CC and CFLAGS can be overriden using an environment variables
 ##
-CC       := /usr/bin/sdcc
-CFLAGS   := $(LibrarySwitch) -mstm8
+#CC       := /usr/bin/sdcc
+CC       := /usr/local/bin/sdcc
+
+# production compile options
+LinkOptions			   	:= --out-fmt-ihx -mstm8
+OutputFile             	:=$(BuildDirectory)/$(ProjectName).ihx
+CFLAGS   				:= $(LibrarySwitch) -mstm8
+
+# debug compile options
+#LinkOptions		:= --out-fmt-elf --all-callee-saves --debug --verbose --stack-auto --fverbose-asm  --float-reent --no-peep -mstm8  
+#OutputFile			:=$(BuildDirectory)/$(ProjectName).elf
+#CFLAGS				:= $(LibrarySwitch) $(LinkOptions)
 
 
 ##
