@@ -120,15 +120,25 @@ void setParam (int val)
 void incParam()
 {
     
-    int pmax = paramMax[paramId];
-    if (paramId == PARAM_THRESHOLD) {
+    int pmax;
+    unsigned char pid = paramId;
+
+    if (pid == PARAM_THRESHOLD) {
         pmax = paramCache[PARAM_MAX_TEMPERATURE] * 10;
+    } else {
+        pmax = paramMax[pid];
     }
 
-    if (paramId == PARAM_RELAY_MODE || paramId == PARAM_OVERHEAT_INDICATION) {
-        paramCache[paramId] = ~paramCache[paramId] & 0x0001;
-    }   else if (paramCache[paramId] < pmax) {
-        paramCache[paramId]++;
+    if (pid == PARAM_RELAY_MODE || pid == PARAM_OVERHEAT_INDICATION) {
+        paramCache[pid] = ~paramCache[paramId] & 0x0001;
+    }   else if (paramCache[pid] < pmax) {
+        if ((paramCache[pid] < -100) || (paramCache[pid] > 999)) {
+            // increment by 1 degree outside of the 0.1 degree range.
+            paramCache[pid]+=10;    
+        } else {
+            paramCache[pid]++;
+        }
+        
     }
 }
 
@@ -137,15 +147,24 @@ void incParam()
  */
 void decParam()
 {
-    int pmin = paramMin[paramId];
-    if (paramId == PARAM_THRESHOLD) {
+    int pmin;
+    unsigned char pid = paramId;
+    
+    if (pid == PARAM_THRESHOLD) {
         pmin = paramCache[PARAM_MIN_TEMPERATURE] * 10;
+    } else {
+        pmin = paramMin[pid];
     }
 
-    if (paramId == PARAM_RELAY_MODE || paramId == PARAM_OVERHEAT_INDICATION) {
-        paramCache[paramId] = ~paramCache[paramId] & 0x0001;
-    } else if (paramCache[paramId] > pmin) {
-        paramCache[paramId]--;
+    if (pid == PARAM_RELAY_MODE || pid == PARAM_OVERHEAT_INDICATION) {
+        paramCache[pid] = ~paramCache[pid] & 0x0001;
+    } else if (paramCache[pid] > pmin) {
+        if ((paramCache[pid] < -99) || (paramCache[pid] > 1000)) {
+            // decrement by 1 degree outside of the 0.1 degree range.
+            paramCache[pid]-=10;
+        } else {
+            paramCache[pid]--;
+        }
     }
 }
 
@@ -248,7 +267,12 @@ void paramToString (unsigned char id, unsigned char* strBuff)
         break;
 
     case PARAM_THRESHOLD:
-        itofpa (paramCache[id], strBuff, 0);
+        if ((paramCache[id] < -99) || (paramCache[id] > 999)) {
+            // do not display decimal point for temperatures outside of the 0.1 degree range (-9.9 to 99)
+            itofpa (paramCache[id], strBuff, 6);
+        } else {
+            itofpa (paramCache[id], strBuff, 0);
+        }
         break;
 
     default: // Display "OFF" to all unknown ID
