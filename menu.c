@@ -28,7 +28,9 @@
 #define MENU_1_SEC_PASSED   32
 #define MENU_3_SEC_PASSED   MENU_1_SEC_PASSED * 3
 #define MENU_5_SEC_PASSED   MENU_1_SEC_PASSED * 5
-#define MENU_AUTOINC_DELAY  MENU_1_SEC_PASSED / 8
+#define MENU_125_MILLISEC_PASSED MENU_1_SEC_PASSED / 8
+#define MENU_AUTOINC_DELAY  0
+
 
 static unsigned char menuDisplay;
 static unsigned char menuState;
