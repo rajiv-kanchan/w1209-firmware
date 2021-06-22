@@ -24,6 +24,12 @@
 #define false   0
 #endif
 
+// Read button state every BUTTON_STATE_CHECK_MSEC msec
+// NOTE: values can only be in multiples of 2, 
+// as our system clock resolution is 2ms.
+#define BUTTON_STATE_CHECK_MSEC	    6       
+
+void debounceButton();
 void initButtons();
 bool isButton1();
 bool isButton2();
@@ -31,8 +37,7 @@ bool isButton3();
 bool getButton1();
 bool getButton2();
 bool getButton3();
+unsigned char event();
 unsigned char getButton();
 unsigned char getButtonDiff();
-void EXTI2_handler() __interrupt (5);
-
 #endif

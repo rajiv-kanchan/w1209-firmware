@@ -34,8 +34,63 @@
 // PC.5
 #define BUTTON3_BIT    0x20
 
-static unsigned char status;
-static unsigned char diff;
+
+#define MAX_CHECKS 10                   // No. of checks before a button is debounced.
+static unsigned char debouncedState;    // Debounced state of the buttons.
+static unsigned char changedState;      // stores change in state of the buttons.
+static unsigned char state[MAX_CHECKS]={0}; // Array that maintains bounce status.
+static unsigned char index=0;             // pointer into state.
+
+unsigned char rawButtonPress() {
+    return ~ (BUTTONS_PORT & (BUTTON1_BIT | BUTTON2_BIT | BUTTON3_BIT) );
+}
+
+
+// debounce algorithm taken from http://www.ganssle.com/debouncing.htm
+// debounces all 3 button presses and stores the debounced state in variable debouncedState.
+// Also stores any button state change in variable changedState.
+// MAX_CHECKS decides the no. of checks before a button is debounced.
+void debounceButton() {
+    unsigned char i,j;
+    state[index] = rawButtonPress();
+    ++index;
+    j=0xff;
+    for (i=0; i<MAX_CHECKS; i++) {
+        j = j & state[i];
+    }
+    // update changed state
+    changedState = debouncedState ^ j;
+    debouncedState = j;
+    if (index>=MAX_CHECKS) {
+        index=0;
+    }
+}
+
+// event returns corresponding event for button press.
+// returns MENU_EVENT_NONE if no button is pressed.
+unsigned char event() {
+    if (isButton1() ) {
+        if (getButton1() ) {
+            return MENU_EVENT_PUSH_BUTTON1;
+        } else {
+            return MENU_EVENT_RELEASE_BUTTON1;
+        }
+    } else if (isButton2() ) {
+        if (getButton2() ) {
+            return MENU_EVENT_PUSH_BUTTON2;
+        } else {
+            return MENU_EVENT_RELEASE_BUTTON2;
+        }
+    } else if (isButton3() ) {
+        if (getButton3() ) {
+            return MENU_EVENT_PUSH_BUTTON3;
+        } else {
+            return MENU_EVENT_RELEASE_BUTTON3;
+        }
+    } else {
+        return MENU_EVENT_NONE;
+    }
+}
 
 /**
  * @brief Configure approptiate pins of MCU as digital inputs. Set
@@ -45,10 +100,6 @@ static unsigned char diff;
 void initButtons()
 {
     PC_CR1 |= BUTTON1_BIT | BUTTON2_BIT | BUTTON3_BIT;
-    PC_CR2 |= BUTTON1_BIT | BUTTON2_BIT | BUTTON3_BIT;
-    status = ~ (BUTTONS_PORT & (BUTTON1_BIT | BUTTON2_BIT | BUTTON3_BIT) );
-    diff = 0;
-    EXTI_CR1 |= 0x30;   // generate interrupt on falling and rising front.
 }
 
 /**
@@ -58,7 +109,7 @@ void initButtons()
  */
 unsigned char getButton()
 {
-    return status;
+    return debouncedState;
 }
 
 /**
@@ -67,7 +118,7 @@ unsigned char getButton()
  */
 unsigned char getButtonDiff()
 {
-    return diff;
+    return changedState;
 }
 
 /**
@@ -76,7 +127,7 @@ unsigned char getButtonDiff()
  */
 bool getButton1()
 {
-    return status & BUTTON1_BIT;
+    return debouncedState & BUTTON1_BIT;
 }
 
 /**
@@ -85,7 +136,7 @@ bool getButton1()
  */
 bool getButton2()
 {
-    return status & BUTTON2_BIT;
+    return debouncedState & BUTTON2_BIT;
 }
 
 /**
@@ -94,17 +145,17 @@ bool getButton2()
  */
 bool getButton3()
 {
-    return status & BUTTON3_BIT;
+    return debouncedState & BUTTON3_BIT;
 }
 
 /**
- * @brief
+ * @brief isButton1 returns true if the button state has changed.
  * @return
  */
 bool isButton1()
 {
-    if (diff & BUTTON1_BIT) {
-        diff &= ~BUTTON1_BIT;
+    if (changedState & BUTTON1_BIT) {
+        changedState &= ~BUTTON1_BIT;
         return true;
     }
 
@@ -112,65 +163,29 @@ bool isButton1()
 }
 
 /**
- * @brief
+ * @brief isButton2 returns true if the button state has changed.
  * @return
  */
 bool isButton2()
 {
-    if (diff & BUTTON2_BIT) {
-        diff &= ~BUTTON2_BIT;
+    if (changedState & BUTTON2_BIT) {
+        changedState &= ~BUTTON2_BIT;
         return true;
     }
 
     return false;
-}
+}// runs 2 times a second
 
 /**
- * @brief
+ * @brief isButton3 returns true if the button state has changed.
  * @return
  */
 bool isButton3()
 {
-    if (diff & BUTTON3_BIT) {
-        diff &= ~BUTTON3_BIT;
+    if (changedState & BUTTON3_BIT) {
+        changedState &= ~BUTTON3_BIT;
         return true;
     }
 
     return false;
-}
-
-/**
- * @brief This function is button's interrupt request handler
- * so keep it extremely small and fast.
- */
-void EXTI2_handler() __interrupt (5)
-{
-    unsigned char event;
-    diff = status ^ ~ (BUTTONS_PORT & (BUTTON1_BIT | BUTTON2_BIT | BUTTON3_BIT) );
-    status = ~ (BUTTONS_PORT & (BUTTON1_BIT | BUTTON2_BIT | BUTTON3_BIT) );
-
-    // Send appropriate event to menu.
-    if (isButton1() ) {
-        if (getButton1() ) {
-            event = MENU_EVENT_PUSH_BUTTON1;
-        } else {
-            event = MENU_EVENT_RELEASE_BUTTON1;
-        }
-    } else if (isButton2() ) {
-        if (getButton2() ) {
-            event = MENU_EVENT_PUSH_BUTTON2;
-        } else {
-            event = MENU_EVENT_RELEASE_BUTTON2;
-        }
-    } else if (isButton3() ) {
-        if (getButton3() ) {
-            event = MENU_EVENT_PUSH_BUTTON3;
-        } else {
-            event = MENU_EVENT_RELEASE_BUTTON3;
-        }
-    } else {
-        return;
-    }
-
-    feedMenu (event);
 }

@@ -27,6 +27,7 @@
 #include "display.h"
 #include "menu.h"
 #include "relay.h"
+#include "buttons.h"
 
 #define TICKS_IN_SECOND     500
 #define BITS_FOR_TICKS      9
@@ -159,13 +160,22 @@ void TIM4_UPD_handler() __interrupt (23)
     uptime++;
 
     // Try not to call all refresh functions at once.
-    if ( ( (unsigned char) getUptimeTicks() & 0x0F) == 1) {
-        refreshMenu();
-    } else if ( ( (unsigned char) getUptimeTicks() & 0xFF) == 2) {
-        startADC();
-    } else if ( ( (unsigned char) getUptimeTicks() & 0xFF) == 3) {
-        refreshRelay();
+    if ( ( (unsigned char) getUptimeTicks() & 0x0F) == 1) {     
+        refreshMenu();      // runs 32 times a second
+    } else if ( ( (unsigned char) getUptimeTicks() & 0xFF) == 2) {  
+        startADC();         // runs 2 times a second
+    } else if ( ( (unsigned char) getUptimeTicks() & 0xFF) == 3) {  
+        refreshRelay();     // runs 2 times a second
     }
 
+    // Read and debounce buttons every BUTTON_STATE_CHECK_MSEC msec 
+    if ( ( (unsigned char) getUptimeTicks() % (BUTTON_STATE_CHECK_MSEC/2) ) == 0) {
+        debounceButton();    
+        unsigned char evt = event();
+        if (evt!=MENU_EVENT_NONE) {
+            // Send appropriate event to menu.
+            feedMenu (evt);
+        }
+    }
     refreshDisplay();
 }

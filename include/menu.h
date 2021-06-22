@@ -31,6 +31,7 @@
 #define MENU_EVENT_RELEASE_BUTTON2  4
 #define MENU_EVENT_RELEASE_BUTTON3  5
 #define MENU_EVENT_CHECK_TIMER      6
+#define MENU_EVENT_NONE             7
 
 void initMenu();
 void refreshMenu();
