@@ -130,7 +130,7 @@ void incParam()
     }
 
     if (pid == PARAM_RELAY_MODE || pid == PARAM_OVERHEAT_INDICATION) {
-        paramCache[pid] = ~paramCache[paramId] & 0x0001;
+        paramCache[pid] = ~paramCache[pid] & 0x0001;
     }   else if (paramCache[pid] < pmax) {
         if ((paramCache[pid] < -100) || (paramCache[pid] > 999)) {
             // increment by 1 degree outside of the 0.1 degree range.
