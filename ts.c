@@ -53,7 +53,12 @@ int main()
 
         if (getMenuDisplay() == MENU_ROOT) {
             int temp = getTemperature();
-            itofpa (temp, (char*) stringBuffer, 0);
+            if ((temp < -99) || (temp > 999)) {
+                // do not display decimal point for temperatures outside of the 0.1 degree range (-9.9 to 99)
+                itofpa (temp, (char*) stringBuffer, 6);
+            } else {
+                itofpa (temp, (char*) stringBuffer, 0);
+            }        
             setDisplayStr ( (char*) stringBuffer);
 
             if (getParamById (PARAM_OVERHEAT_INDICATION) ) {
